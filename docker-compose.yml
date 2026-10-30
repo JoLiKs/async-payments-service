@@ -63,55 +63,6 @@ services:
       rabbitmq:
         condition: service_healthy
 
-volumes:
-      - pgdata:/var/lib/postgresql/data
-      - ./docker/create-test-db.sql:/docker-entrypoint-initdb.d/create-test-db.sql:ro
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d payments"]
-      interval: 3s
-      timeout: 3s
-      retries: 20
-
-  rabbitmq:
-    image: rabbitmq:4-management-alpine
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
-      interval: 5s
-      timeout: 5s
-      retries: 20
-
-  migrate:
-    build: .
-    command: ["alembic", "upgrade", "head"]
-    environment: *app-env
-    depends_on:
-      postgres:
-        condition: service_healthy
-
-  api:
-    build: .
-    environment: *app-env
-    ports:
-      - "8000:8000"
-    depends_on:
-      migrate:
-        condition: service_completed_successfully
-
-  consumer:
-    build: .
-    command: ["faststream", "run", "app.worker:app"]
-    environment:
-      <<: *app-env
-      RUN_OUTBOX_RELAY: "true"
-    depends_on:
-      migrate:
-        condition: service_completed_successfully
-      rabbitmq:
-        condition: service_healthy
-
   webhook-receiver:
     build: .
     command: ["python", "scripts/webhook_receiver.py"]
