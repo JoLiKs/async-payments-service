@@ -135,7 +135,7 @@ curl http://localhost:8000/api/v1/payments/b7107a04-e8e4-428f-b8ca-e19d5f3e49bb 
 ```json
 {"id":"b7107a04-e8e4-428f-b8ca-e19d5f3e49bb","amount":"1500.00","currency":"RUB",
  "description":"Заказ #42","metadata":{"order_id":42},"status":"succeeded",
- "idempotancy_key":"order-42","webhook_url":"http://webhook-receiver:9000/ok",
+ "idempotency_key":"order-42","webhook_url":"http://webhook-receiver:9000/ok",
  "created_at":"2026-10-30T11:47:54.487386Z","processed_at":"2026-10-30T11:48:06.384193Z"}
 ```
 
@@ -180,7 +180,7 @@ consumer идемпотентен. `outbox.id` передаётся как `mess
 
 ### Идемпотентность
 
-* **API.** `idempotancy_key` — уникальный индекс. Вместе с платежом хранится
+* **API.** `idempotency_key` — уникальный индекс. Вместе с платежом хранится
   `request_hash` — SHA-256 от нормализованного тела (сумма приводится к каноническому
   виду, JSON сериализуется с сортировкой ключей). Повтор с тем же телом возвращает
   существующий платёж, с другим — `409`. Гонка параллельных запросов с одним ключом
@@ -219,7 +219,7 @@ pip install -r requirements-dev.txt
 TEST_DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/payments_test pytest
 ```
 
-* `test_idempotancy.py` — повтор ключа, конфликт тела, гонка 10 параллельных запросов,
+* `test_idempotency.py` — повтор ключа, конфликт тела, гонка 10 параллельных запросов,
   HTTP-уровень (202/409/401/422/404).
 * `test_outbox.py` — атомарная запись платежа и события, публикация relay'ем без
   дублей, поведение при недоступном брокере.
